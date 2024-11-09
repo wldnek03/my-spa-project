@@ -45,10 +45,19 @@ jobs:
       - name: Install dependencies and Lighthouse CI CLI
         run: |
           npm install
-          npx lhci autorun --upload.target=temporary-public-storage  # npx를 사용하여 LHCI 실행
+          npm install --save-dev @lhci/cli@0.3.x
+          npm install --global serve  # 정적 파일을 서빙하기 위한 'serve' 패키지 설치
+
+      - name: Start local server for Lighthouse CI
+        run: |
+          npx serve -s build &  # 빌드된 파일을 서빙하는 서버 시작 (백그라운드에서 실행)
+          sleep 5  # 서버가 시작될 시간을 기다림 (필요에 따라 조정 가능)
+
+      - name: Run Lighthouse CI tests
+        run: npx lhci autorun --upload.target=temporary-public-storage  # Lighthouse CI 실행 및 결과 업로드
 
       - name: Send Slack Notification on Success 
         env:
-          SLACK_WEBHOOK_URL : ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL : ${{ 'https://w1731170997-0cn673335.slack.com' }}
         run : |
           curl -X POST --data-urlencode "payload={\"channel\": \"#배포알림\", \"username\": \"deploy-bot\", \"text\": \"배포가 성공적으로 완료되었습니다!\", \"icon_emoji\": \":rocket:\"}" $SLACK_WEBHOOK_URL
